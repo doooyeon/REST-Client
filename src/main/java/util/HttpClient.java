@@ -1,8 +1,9 @@
-import org.apache.http.HttpEntity;
+package util;
+
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -11,33 +12,35 @@ import org.apache.http.impl.client.HttpClients;
 public class HttpClient {
     public static CloseableHttpClient httpclient;
 
-    public static HttpResponse requestWithGet(String url, String submitToken) {
+    public static String requestWithGet(String url, String submitToken) {
         httpclient = HttpClients.createDefault();
         try {
             HttpGet request = new HttpGet(url);
             if (submitToken != null) {
-                request.setHeader("", submitToken);
+                request.setHeader("X-Auth-Token", submitToken);
             }
 
             HttpResponse response = httpclient.execute(request);
-            return response;
+            String json = JsonUtils.responseToJson(url, response);
+            httpclient.close();
+            return json;
         } catch (Exception e) {
             // exception handling
         }
         return null;
     }
 
-    public static HttpResponse requestWithPost(String url, String submitToken, String body) {
+    public static String requestWithPost(String url, String submitToken, String body) {
         httpclient = HttpClients.createDefault();
         try {
             HttpPost request = new HttpPost(url);
             if (submitToken != null) {
-                request.setHeader("", submitToken);
+                request.setHeader("X-Auth-Token", submitToken);
             }
             if (body != null) {
                 // 1
+                request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
                 StringEntity entity = new StringEntity(body, ContentType.APPLICATION_JSON);
-                StringEntity entity2 = new StringEntity(body);
                 request.setEntity(entity);
 
                 // 2
@@ -46,7 +49,9 @@ public class HttpClient {
             }
 
             HttpResponse response = httpclient.execute(request);
-            return response;
+            String json = JsonUtils.responseToJson(url, response);
+            httpclient.close();
+            return json;
         } catch (Exception e) {
             // exception handling
         }
